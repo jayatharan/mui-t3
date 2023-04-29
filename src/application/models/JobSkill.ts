@@ -1,5 +1,5 @@
 import BaseDocument from "./BaseDocument";
-import { JobDocument } from "aws-sdk/clients/iot";
+import { JobDocument } from "./Job";
 import { SkillDocument } from "./Skill";
 
 export default interface JobSkill {
