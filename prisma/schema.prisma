@@ -1,0 +1,991 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Addresses {
+  id                 String               @id @db.Uuid
+  userId             String               @db.Uuid
+  address            String?              @db.VarChar(255)
+  city               String?              @db.VarChar(255)
+  country            String?              @db.VarChar(255)
+  postCode           String?              @db.VarChar(255)
+  createdAt          DateTime             @db.Timestamptz(6)
+  updatedAt          DateTime             @db.Timestamptz(6)
+  Users              Users                @relation(fields: [userId], references: [id], onDelete: NoAction)
+  Biographies        Biographies[]
+  Companies          Companies[]
+  EducationalDetails EducationalDetails[]
+}
+
+model AdminTasks {
+  id                              String                 @id @db.Uuid
+  task                            String                 @db.VarChar(255)
+  description                     String?                @db.VarChar(255)
+  userId                          String                 @db.Uuid
+  adminId                         String                 @db.Uuid
+  status                          enum_AdminTasks_status @default(new)
+  createdAt                       DateTime               @db.Timestamptz(6)
+  updatedAt                       DateTime               @db.Timestamptz(6)
+  Users_AdminTasks_adminIdToUsers Users                  @relation("AdminTasks_adminIdToUsers", fields: [adminId], references: [id], onDelete: NoAction)
+  Users_AdminTasks_userIdToUsers  Users                  @relation("AdminTasks_userIdToUsers", fields: [userId], references: [id], onDelete: NoAction)
+}
+
+model AppConstants {
+  id        String   @id @db.Uuid
+  name      String?  @db.VarChar(255)
+  data      Json     @db.Json
+  createdAt DateTime @db.Timestamptz(6)
+  updatedAt DateTime @db.Timestamptz(6)
+}
+
+model Biographies {
+  id        String     @id @db.Uuid
+  userId    String     @db.Uuid
+  firstName String?    @db.VarChar(255)
+  lastName  String?    @db.VarChar(255)
+  jobRole   String?    @db.VarChar(255)
+  addressId String?    @db.Uuid
+  companyId String?    @db.Uuid
+  imageId   String?    @db.Uuid
+  createdAt DateTime   @db.Timestamptz(6)
+  updatedAt DateTime   @db.Timestamptz(6)
+  Addresses Addresses? @relation(fields: [addressId], references: [id])
+  Companies Companies? @relation(fields: [companyId], references: [id])
+  Files     Files?     @relation(fields: [imageId], references: [id])
+  Users     Users      @relation(fields: [userId], references: [id], onDelete: NoAction)
+}
+
+model ChatMessages {
+  id        String   @id @db.Uuid
+  message   String   @db.VarChar(255)
+  chatId    String   @db.Uuid
+  userId    String   @db.Uuid
+  fileId    String?  @db.Uuid
+  createdAt DateTime @db.Timestamptz(6)
+  updatedAt DateTime @db.Timestamptz(6)
+  Chats     Chats    @relation(fields: [chatId], references: [id], onDelete: NoAction)
+  Files     Files?   @relation(fields: [fileId], references: [id])
+  Users     Users    @relation(fields: [userId], references: [id], onDelete: NoAction)
+}
+
+model ChatUsers {
+  id        String                @id @db.Uuid
+  access    enum_ChatUsers_access @default(member)
+  chatId    String                @db.Uuid
+  userId    String                @db.Uuid
+  createdAt DateTime              @db.Timestamptz(6)
+  updatedAt DateTime              @db.Timestamptz(6)
+  Chats     Chats                 @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  Users     Users                 @relation(fields: [userId], references: [id], onDelete: NoAction)
+}
+
+model Chats {
+  id           String         @id @db.Uuid
+  chat         String         @db.VarChar(255)
+  userId       String         @db.Uuid
+  avatarId     String?        @db.Uuid
+  createdAt    DateTime       @db.Timestamptz(6)
+  updatedAt    DateTime       @db.Timestamptz(6)
+  ChatMessages ChatMessages[]
+  ChatUsers    ChatUsers[]
+  Files        Files?         @relation(fields: [avatarId], references: [id])
+  Users        Users          @relation(fields: [userId], references: [id], onDelete: NoAction)
+}
+
+model Companies {
+  id                  String                @id @db.Uuid
+  userId              String                @db.Uuid
+  name                String                @db.VarChar(255)
+  description         String?               @db.VarChar(255)
+  addressId           String?               @db.Uuid
+  createdAt           DateTime              @db.Timestamptz(6)
+  updatedAt           DateTime              @db.Timestamptz(6)
+  Biographies         Biographies[]
+  Addresses           Addresses?            @relation(fields: [addressId], references: [id])
+  Users               Users                 @relation(fields: [userId], references: [id], onDelete: NoAction)
+  Jobs                Jobs[]
+  ProfessionalDetails ProfessionalDetails[]
+}
+
+model DisputeUsers {
+  id          String   @id @db.Uuid
+  userId      String   @db.Uuid
+  disputeUser String   @db.VarChar(255)
+  complain    String   @db.VarChar(255)
+  description String?  @db.VarChar(255)
+  disputeId   String   @db.Uuid
+  status      String   @default("open") @db.VarChar(255)
+  createdAt   DateTime @db.Timestamptz(6)
+  updatedAt   DateTime @db.Timestamptz(6)
+  Disputes    Disputes @relation(fields: [disputeId], references: [id], onDelete: Cascade)
+  Users       Users    @relation(fields: [userId], references: [id], onDelete: NoAction)
+}
+
+model Disputes {
+  id           String               @id @db.Uuid
+  userId       String               @db.Uuid
+  dispute      String               @db.VarChar(255)
+  description  String?              @db.VarChar(255)
+  status       enum_Disputes_status @default(new)
+  createdAt    DateTime             @db.Timestamptz(6)
+  updatedAt    DateTime             @db.Timestamptz(6)
+  DisputeUsers DisputeUsers[]
+  Users        Users                @relation(fields: [userId], references: [id], onDelete: NoAction)
+}
+
+model EducationalDetails {
+  id               String                       @id @db.Uuid
+  userId           String                       @db.Uuid
+  courseName       String                       @db.VarChar(255)
+  organizationName String                       @db.VarChar(255)
+  type             enum_EducationalDetails_type
+  description      String?                      @db.VarChar(255)
+  startDate        DateTime?                    @db.Timestamptz(6)
+  endDate          DateTime?                    @db.Timestamptz(6)
+  imageId          String?                      @db.Uuid
+  addressId        String?                      @db.Uuid
+  createdAt        DateTime                     @db.Timestamptz(6)
+  updatedAt        DateTime                     @db.Timestamptz(6)
+  Addresses        Addresses?                   @relation(fields: [addressId], references: [id])
+  Files            Files?                       @relation(fields: [imageId], references: [id])
+  Users            Users                        @relation(fields: [userId], references: [id], onDelete: NoAction)
+}
+
+model Files {
+  id                   String                @id @db.Uuid
+  acl                  String?               @db.VarChar(255)
+  bucket               String?               @db.VarChar(255)
+  contentDisposition   String?               @db.VarChar(255)
+  contentEncoding      String?               @db.VarChar(255)
+  contentType          String?               @db.VarChar(255)
+  encoding             String?               @db.VarChar(255)
+  etag                 String?               @db.VarChar(255)
+  fieldname            String?               @db.VarChar(255)
+  key                  String?               @db.VarChar(255)
+  location             String?               @db.VarChar(255)
+  mimetype             String?               @db.VarChar(255)
+  orignalname          String?               @db.VarChar(255)
+  serverSideEncryption String?               @db.VarChar(255)
+  size                 Float?
+  storageClass         String?               @db.VarChar(255)
+  createdAt            DateTime              @db.Timestamptz(6)
+  updatedAt            DateTime              @db.Timestamptz(6)
+  Biographies          Biographies[]
+  ChatMessages         ChatMessages[]
+  Chats                Chats[]
+  EducationalDetails   EducationalDetails[]
+  JobProposals         JobProposals[]
+  ProfessionalDetails  ProfessionalDetails[]
+  Users                Users[]
+}
+
+model JobFiles {
+  id        String   @id @db.Uuid
+  jobId     String?  @db.Uuid
+  fileId    String?  @db.Uuid
+  createdAt DateTime @db.Timestamptz(6)
+  updatedAt DateTime @db.Timestamptz(6)
+}
+
+model JobProposals {
+  id          String                   @id @db.Uuid
+  userId      String                   @db.Uuid
+  jobId       String                   @db.Uuid
+  status      enum_JobProposals_status @default(new)
+  coverLetter String?                  @db.VarChar(255)
+  skillIds    String[]                 @default(dbgenerated("(ARRAY[]::character varying[])::character varying(255)[]")) @db.VarChar(255)
+  fileId      String?                  @db.Uuid
+  shortListed Boolean                  @default(false)
+  createdAt   DateTime                 @db.Timestamptz(6)
+  updatedAt   DateTime                 @db.Timestamptz(6)
+  Files       Files?                   @relation(fields: [fileId], references: [id])
+  Jobs        Jobs                     @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  Users       Users                    @relation(fields: [userId], references: [id], onDelete: NoAction)
+}
+
+model JobRequests {
+  id        String   @id @db.Uuid
+  userId    String   @db.Uuid
+  teamId    String   @db.Uuid
+  title     String   @db.VarChar(255)
+  salary    Float
+  createdAt DateTime @db.Timestamptz(6)
+  updatedAt DateTime @db.Timestamptz(6)
+  Teams     Teams    @relation(fields: [teamId], references: [id], onDelete: NoAction)
+  Users     Users    @relation(fields: [userId], references: [id], onDelete: NoAction)
+}
+
+model JobSkills {
+  id        String   @id @db.Uuid
+  jobId     String   @db.Uuid
+  skillId   String   @db.Uuid
+  points    Decimal  @default(0) @db.Decimal
+  level     Int      @default(0)
+  createdAt DateTime @db.Timestamptz(6)
+  updatedAt DateTime @db.Timestamptz(6)
+  Jobs      Jobs     @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  Skills    Skills   @relation(fields: [skillId], references: [id], onDelete: NoAction)
+}
+
+model Jobs {
+  id            String           @id @db.Uuid
+  userId        String           @db.Uuid
+  title         String           @db.VarChar(255)
+  description   String?          @db.VarChar(255)
+  salary        String?          @db.VarChar(255)
+  type          String?          @db.VarChar(255)
+  companyId     String?          @db.Uuid
+  startDate     DateTime?        @db.Timestamptz(6)
+  endDate       DateTime?        @db.Timestamptz(6)
+  projectId     String?          @db.Uuid
+  status        enum_Jobs_status @default(open)
+  jobType       String           @default("permanent") @db.VarChar(255)
+  employeeType  String           @default("fullTime") @db.VarChar(255)
+  modality      String           @default("remote") @db.VarChar(255)
+  skillIds      String[]         @default(dbgenerated("(ARRAY[]::character varying[])::character varying(255)[]")) @db.VarChar(255)
+  createdAt     DateTime         @db.Timestamptz(6)
+  updatedAt     DateTime         @db.Timestamptz(6)
+  JobProposals  JobProposals[]
+  JobSkills     JobSkills[]
+  Companies     Companies?       @relation(fields: [companyId], references: [id])
+  Projects      Projects?        @relation(fields: [projectId], references: [id])
+  Users         Users            @relation(fields: [userId], references: [id], onDelete: NoAction)
+  SkillRequests SkillRequests[]
+}
+
+model MeetingUsers {
+  id                                  String                   @id @db.Uuid
+  meetingId                           String                   @db.Uuid
+  userId                              String?                  @db.Uuid
+  email                               String                   @db.VarChar(255)
+  access                              enum_MeetingUsers_access @default(member)
+  status                              enum_MeetingUsers_status @default(new)
+  createdAt                           DateTime                 @db.Timestamptz(6)
+  updatedAt                           DateTime                 @db.Timestamptz(6)
+  Users_MeetingUsers_meetingIdToUsers Users                    @relation("MeetingUsers_meetingIdToUsers", fields: [meetingId], references: [id], onDelete: NoAction)
+  Users_MeetingUsers_userIdToUsers    Users?                   @relation("MeetingUsers_userIdToUsers", fields: [userId], references: [id])
+}
+
+model Meetings {
+  id          String               @id @db.Uuid
+  type        String               @db.VarChar(255)
+  status      enum_Meetings_status @default(new)
+  startTime   DateTime             @db.Timestamptz(6)
+  endTime     DateTime?            @db.Timestamptz(6)
+  link        String?              @db.VarChar(255)
+  metaData    String?              @db.VarChar(255)
+  description String?              @db.VarChar(255)
+  notes       String?              @db.VarChar(255)
+  createdAt   DateTime             @db.Timestamptz(6)
+  updatedAt   DateTime             @db.Timestamptz(6)
+  userId      String?              @db.Uuid
+  Users       Users?               @relation(fields: [userId], references: [id])
+}
+
+model Meets {
+  id          String   @id @db.Uuid
+  title       String   @db.VarChar(255)
+  description String?  @db.VarChar(255)
+  startAt     DateTime @db.Timestamptz(6)
+  endAt       DateTime @db.Timestamptz(6)
+  createdAt   DateTime @db.Timestamptz(6)
+  updatedAt   DateTime @db.Timestamptz(6)
+}
+
+model ProfessionalDetails {
+  id          String    @id @db.Uuid
+  userId      String    @db.Uuid
+  jobRole     String    @db.VarChar(255)
+  description String?   @db.VarChar(255)
+  startDate   DateTime? @db.Timestamptz(6)
+  endDate     DateTime? @db.Timestamptz(6)
+  imageId     String?   @db.Uuid
+  companyId   String    @db.Uuid
+  createdAt   DateTime  @db.Timestamptz(6)
+  updatedAt   DateTime  @db.Timestamptz(6)
+  Companies   Companies @relation(fields: [companyId], references: [id], onDelete: NoAction)
+  Files       Files?    @relation(fields: [imageId], references: [id])
+  Users       Users     @relation(fields: [userId], references: [id], onDelete: NoAction)
+}
+
+model ProjectCoworkers {
+  id                                   String                       @id @db.Uuid
+  userId                               String?                      @db.Uuid
+  email                                String                       @db.VarChar(255)
+  projectId                            String                       @db.Uuid
+  access                               enum_ProjectCoworkers_access @default(view_only)
+  status                               enum_ProjectCoworkers_status @default(invited)
+  emailStatus                          String                       @default("pending") @db.VarChar(255)
+  createdAt                            DateTime                     @db.Timestamptz(6)
+  updatedAt                            DateTime                     @db.Timestamptz(6)
+  UserId                               String?                      @db.VarChar(255)
+  Users_ProjectCoworkers_UserIdToUsers Users?                       @relation("ProjectCoworkers_UserIdToUsers", fields: [UserId], references: [email])
+  Projects                             Projects                     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  Users_ProjectCoworkers_userIdToUsers Users?                       @relation("ProjectCoworkers_userIdToUsers", fields: [userId], references: [id])
+}
+
+model ProjectDetails {
+  id           String    @id @db.Uuid
+  userId       String    @db.Uuid
+  name         String    @db.VarChar(255)
+  category     String    @db.VarChar(255)
+  description  String?   @db.VarChar(255)
+  startDate    DateTime? @db.Timestamptz(6)
+  endDate      DateTime? @db.Timestamptz(6)
+  images       String[]  @db.VarChar(255)
+  technologies String[]  @db.VarChar(255)
+  createdAt    DateTime  @db.Timestamptz(6)
+  updatedAt    DateTime  @db.Timestamptz(6)
+  Users        Users     @relation(fields: [userId], references: [id], onDelete: NoAction)
+}
+
+model ProjectFiles {
+  id        String   @id @db.Uuid
+  projectId String?  @db.Uuid
+  fileId    String?  @db.Uuid
+  createdAt DateTime @db.Timestamptz(6)
+  updatedAt DateTime @db.Timestamptz(6)
+}
+
+model ProjectInvites {
+  id          String                     @id @db.Uuid
+  userId      String                     @db.Uuid
+  projectId   String                     @db.Uuid
+  designation String?                    @db.VarChar(255)
+  description String?                    @db.VarChar(255)
+  budget      Float?
+  hourlyMin   Float?
+  hourlyMax   Float?
+  choice      enum_ProjectInvites_choice @default(fixed)
+  timeline    String                     @db.VarChar(255)
+  hourPerWeek String?                    @db.VarChar(255)
+  status      enum_ProjectInvites_status @default(active)
+  createdAt   DateTime                   @db.Timestamptz(6)
+  updatedAt   DateTime                   @db.Timestamptz(6)
+  Projects    Projects                   @relation(fields: [projectId], references: [id], onDelete: NoAction)
+  Users       Users                      @relation(fields: [userId], references: [id], onDelete: NoAction)
+}
+
+model ProjectProposals {
+  id          String                       @id @db.Uuid
+  userId      String                       @db.Uuid
+  projectId   String                       @db.Uuid
+  description String?                      @db.VarChar(255)
+  amount      Float?
+  hourlyMin   Float?
+  hourlyMax   Float?
+  choice      enum_ProjectProposals_choice @default(fixed)
+  startDate   DateTime?                    @db.Timestamptz(6)
+  endDate     DateTime?                    @db.Timestamptz(6)
+  status      enum_ProjectProposals_status @default(new)
+  filesId     String[]                     @db.VarChar(255)
+  shortListed Boolean                      @default(false)
+  createdAt   DateTime                     @db.Timestamptz(6)
+  updatedAt   DateTime                     @db.Timestamptz(6)
+  Projects    Projects                     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  Users       Users                        @relation(fields: [userId], references: [id], onDelete: NoAction)
+}
+
+model ProjectReviews {
+  id        String   @id @db.Uuid
+  userId    String   @db.Uuid
+  projectId String   @db.Uuid
+  comment   String   @db.VarChar(255)
+  rating    Int      @default(0)
+  createdAt DateTime @db.Timestamptz(6)
+  updatedAt DateTime @db.Timestamptz(6)
+}
+
+model ProjectSkills {
+  id        String   @id @db.Uuid
+  projectId String   @db.Uuid
+  skillId   String   @db.Uuid
+  points    Decimal  @default(0) @db.Decimal
+  level     Int      @default(0)
+  createdAt DateTime @db.Timestamptz(6)
+  updatedAt DateTime @db.Timestamptz(6)
+  Projects  Projects @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  Skills    Skills   @relation(fields: [skillId], references: [id], onDelete: NoAction)
+}
+
+model ProjectTeamMembers {
+  id          String   @id @db.Uuid
+  userId      String   @db.Uuid
+  teamId      String   @db.Uuid
+  designation String   @db.VarChar(255)
+  createdAt   DateTime @db.Timestamptz(6)
+  updatedAt   DateTime @db.Timestamptz(6)
+  Teams       Teams    @relation(fields: [teamId], references: [id], onDelete: NoAction)
+  Users       Users    @relation(fields: [userId], references: [id], onDelete: NoAction)
+}
+
+model Projects {
+  id                 String                     @id @db.Uuid
+  userId             String                     @db.Uuid
+  title              String                     @db.VarChar(255)
+  status             enum_Projects_status       @default(open)
+  description        String?
+  category           String                     @db.VarChar(255)
+  budget             Float?
+  hourlyMin          Float?
+  hourlyMax          Float?
+  choice             enum_Projects_choice       @default(fixed)
+  timeline           enum_Projects_timeline     @default(less_than_one_month)
+  skillLevel         enum_Projects_skillLevel   @default(basic)
+  startDate          DateTime?                  @db.Timestamptz(6)
+  endDate            DateTime?                  @db.Timestamptz(6)
+  amount             Float?
+  rate               Float?
+  hoursPerWeek       enum_Projects_hoursPerWeek @default(more_than_30)
+  createdAt          DateTime                   @db.Timestamptz(6)
+  updatedAt          DateTime                   @db.Timestamptz(6)
+  Jobs               Jobs[]
+  ProjectCoworkers   ProjectCoworkers[]
+  ProjectInvites     ProjectInvites[]
+  ProjectProposals   ProjectProposals[]
+  ProjectSkills      ProjectSkills[]
+  Users              Users                      @relation(fields: [userId], references: [id], onDelete: NoAction)
+  SkillRequests      SkillRequests[]
+  TalkRequests       TalkRequests[]
+  Teams              Teams[]
+  ToDos              ToDos[]
+  ToolProjects       ToolProjects[]
+  UserProjectReviews UserProjectReviews[]
+}
+
+model Sessions {
+  id        String   @id @db.Uuid
+  userId    String   @db.Uuid
+  valid     Boolean  @default(true)
+  userAgent String?  @db.VarChar(255)
+  createdAt DateTime @db.Timestamptz(6)
+  updatedAt DateTime @db.Timestamptz(6)
+  Users     Users    @relation(fields: [userId], references: [id], onDelete: NoAction)
+}
+
+model SkillRequests {
+  id        String    @id @db.Uuid
+  title     String?   @db.VarChar(255)
+  projectId String?   @db.Uuid
+  jobId     String?   @db.Uuid
+  skillId   String?   @db.Uuid
+  userId    String?   @db.Uuid
+  points    Decimal   @default(0) @db.Decimal
+  level     Int       @default(0)
+  resolved  Boolean?  @default(false)
+  createdAt DateTime  @db.Timestamptz(6)
+  updatedAt DateTime  @db.Timestamptz(6)
+  Jobs      Jobs?     @relation(fields: [jobId], references: [id])
+  Projects  Projects? @relation(fields: [projectId], references: [id])
+  Skills    Skills?   @relation(fields: [skillId], references: [id])
+  Users     Users?    @relation(fields: [userId], references: [id])
+}
+
+model Skills {
+  id            String          @id @db.Uuid
+  title         String          @unique @db.VarChar(255)
+  createdAt     DateTime        @db.Timestamptz(6)
+  updatedAt     DateTime        @db.Timestamptz(6)
+  JobSkills     JobSkills[]
+  ProjectSkills ProjectSkills[]
+  SkillRequests SkillRequests[]
+  UserSkills    UserSkills[]
+}
+
+model SubscriptionPackages {
+  id            String          @id @db.Uuid
+  title         String          @db.VarChar(255)
+  description   String          @db.VarChar(255)
+  amount        Float
+  createdAt     DateTime        @db.Timestamptz(6)
+  updatedAt     DateTime        @db.Timestamptz(6)
+  Subscriptions Subscriptions[]
+}
+
+model Subscriptions {
+  id                   String               @id @db.Uuid
+  userId               String               @db.Uuid
+  packageId            String               @db.Uuid
+  startDate            DateTime?            @db.Timestamptz(6)
+  endDate              DateTime?            @db.Timestamptz(6)
+  amount               Float
+  needToPay            Float                @default(0)
+  active               Boolean              @default(false)
+  createdAt            DateTime             @db.Timestamptz(6)
+  updatedAt            DateTime             @db.Timestamptz(6)
+  SubscriptionPackages SubscriptionPackages @relation(fields: [packageId], references: [id], onDelete: NoAction)
+  Users                Users                @relation(fields: [userId], references: [id], onDelete: NoAction)
+}
+
+model TalkRequests {
+  id        String   @id @db.Uuid
+  userId    String   @db.Uuid
+  projectId String   @db.Uuid
+  time      DateTime @db.Timestamptz(6)
+  createdAt DateTime @db.Timestamptz(6)
+  updatedAt DateTime @db.Timestamptz(6)
+  Projects  Projects @relation(fields: [projectId], references: [id], onDelete: NoAction)
+  Users     Users    @relation(fields: [userId], references: [id], onDelete: NoAction)
+}
+
+model TeamProposals {
+  id        String                    @id @db.Uuid
+  userId    String                    @db.Uuid
+  teamId    String                    @db.Uuid
+  status    enum_TeamProposals_status @default(new)
+  createdAt DateTime                  @db.Timestamptz(6)
+  updatedAt DateTime                  @db.Timestamptz(6)
+  Teams     Teams                     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  Users     Users                     @relation(fields: [userId], references: [id], onDelete: NoAction)
+}
+
+model Teams {
+  id                 String               @id @db.Uuid
+  userId             String               @db.Uuid
+  projectId          String               @db.Uuid
+  title              String               @db.VarChar(255)
+  description        String?              @db.VarChar(255)
+  image              String               @default("/images/team/Avatar1.png") @db.VarChar(255)
+  createdAt          DateTime             @db.Timestamptz(6)
+  updatedAt          DateTime             @db.Timestamptz(6)
+  JobRequests        JobRequests[]
+  ProjectTeamMembers ProjectTeamMembers[]
+  TeamProposals      TeamProposals[]
+  Projects           Projects             @relation(fields: [projectId], references: [id], onDelete: NoAction)
+  Users              Users                @relation(fields: [userId], references: [id], onDelete: NoAction)
+}
+
+model ToDos {
+  id        String    @id @db.Uuid
+  completed Boolean   @default(false)
+  task      String    @db.VarChar(255)
+  userId    String    @db.Uuid
+  projectId String?   @db.Uuid
+  createdAt DateTime  @db.Timestamptz(6)
+  updatedAt DateTime  @db.Timestamptz(6)
+  Projects  Projects? @relation(fields: [projectId], references: [id])
+  Users     Users     @relation(fields: [userId], references: [id], onDelete: NoAction)
+}
+
+model ToolProjectFixVersions {
+  id               String                             @id @db.Uuid
+  title            String                             @db.VarChar(255)
+  status           enum_ToolProjectFixVersions_status @default(new)
+  toolProjectId    String                             @db.Uuid
+  createdAt        DateTime                           @db.Timestamptz(6)
+  updatedAt        DateTime                           @db.Timestamptz(6)
+  ToolProjects     ToolProjects                       @relation(fields: [toolProjectId], references: [id], onDelete: NoAction)
+  ToolProjectTasks ToolProjectTasks[]
+}
+
+model ToolProjectSprints {
+  id            String                         @id @db.Uuid
+  title         String                         @db.VarChar(255)
+  status        enum_ToolProjectSprints_status @default(new)
+  backlog       String[]                       @default(dbgenerated("(ARRAY[]::character varying[])::character varying(255)[]")) @db.VarChar(255)
+  toolProjectId String                         @db.Uuid
+  createdAt     DateTime                       @db.Timestamptz(6)
+  updatedAt     DateTime                       @db.Timestamptz(6)
+  ToolProjects  ToolProjects                   @relation(fields: [toolProjectId], references: [id], onDelete: NoAction)
+}
+
+model ToolProjectTags {
+  id            String       @id @db.Uuid
+  tag           String       @db.VarChar(255)
+  toolProjectId String       @db.Uuid
+  createdAt     DateTime     @db.Timestamptz(6)
+  updatedAt     DateTime     @db.Timestamptz(6)
+  ToolProjects  ToolProjects @relation(fields: [toolProjectId], references: [id], onDelete: NoAction)
+}
+
+model ToolProjectTaskAssignees {
+  id                String           @id @db.Uuid
+  userId            String           @db.Uuid
+  toolProjectTaskId String           @db.Uuid
+  current           Boolean          @default(true)
+  createdAt         DateTime         @db.Timestamptz(6)
+  updatedAt         DateTime         @db.Timestamptz(6)
+  ToolProjectTasks  ToolProjectTasks @relation(fields: [toolProjectTaskId], references: [id], onDelete: NoAction)
+  Users             Users            @relation(fields: [userId], references: [id], onDelete: NoAction)
+}
+
+model ToolProjectTaskComments {
+  id                String           @id @db.Uuid
+  userId            String           @db.Uuid
+  comment           String           @db.VarChar(255)
+  toolProjectTaskId String           @db.Uuid
+  createdAt         DateTime         @db.Timestamptz(6)
+  updatedAt         DateTime         @db.Timestamptz(6)
+  ToolProjectTasks  ToolProjectTasks @relation(fields: [toolProjectTaskId], references: [id], onDelete: NoAction)
+  Users             Users            @relation(fields: [userId], references: [id], onDelete: NoAction)
+}
+
+model ToolProjectTasks {
+  id                       String                         @id @db.Uuid
+  userId                   String                         @db.Uuid
+  title                    String                         @db.VarChar(255)
+  description              String?                        @db.VarChar(255)
+  toolProjectId            String                         @db.Uuid
+  type                     enum_ToolProjectTasks_type     @default(task)
+  status                   String?                        @db.VarChar(255)
+  severity                 enum_ToolProjectTasks_severity @default(medium)
+  priority                 enum_ToolProjectTasks_priority @default(medium)
+  storyPoints              Float?
+  tags                     String[]                       @default(dbgenerated("(ARRAY[]::character varying[])::character varying(255)[]")) @db.VarChar(255)
+  createdAt                DateTime                       @db.Timestamptz(6)
+  updatedAt                DateTime                       @db.Timestamptz(6)
+  fixVersionId             String?                        @db.Uuid
+  ToolProjectTaskAssignees ToolProjectTaskAssignees[]
+  ToolProjectTaskComments  ToolProjectTaskComments[]
+  ToolProjectFixVersions   ToolProjectFixVersions?        @relation(fields: [fixVersionId], references: [id])
+  ToolProjects             ToolProjects                   @relation(fields: [toolProjectId], references: [id], onDelete: NoAction)
+  Users                    Users                          @relation(fields: [userId], references: [id], onDelete: NoAction)
+}
+
+model ToolProjectUsers {
+  id            String                       @id @db.Uuid
+  userId        String                       @db.Uuid
+  status        enum_ToolProjectUsers_status @default(pending)
+  access        enum_ToolProjectUsers_access @default(member)
+  toolProjectId String                       @db.Uuid
+  createdAt     DateTime                     @db.Timestamptz(6)
+  updatedAt     DateTime                     @db.Timestamptz(6)
+  ToolProjects  ToolProjects                 @relation(fields: [toolProjectId], references: [id], onDelete: Cascade)
+  Users         Users                        @relation(fields: [userId], references: [id], onDelete: NoAction)
+}
+
+model ToolProjects {
+  id                     String                   @id @db.Uuid
+  userId                 String                   @db.Uuid
+  title                  String                   @db.VarChar(255)
+  status                 enum_ToolProjects_status @default(active)
+  description            String?                  @db.VarChar(255)
+  backlog                String[]                 @default(dbgenerated("(ARRAY[]::character varying[])::character varying(255)[]")) @db.VarChar(255)
+  statuses               String[]                 @default(dbgenerated("(ARRAY[]::character varying[])::character varying(255)[]")) @db.VarChar(255)
+  projectId              String                   @db.Uuid
+  createdAt              DateTime                 @db.Timestamptz(6)
+  updatedAt              DateTime                 @db.Timestamptz(6)
+  ToolProjectFixVersions ToolProjectFixVersions[]
+  ToolProjectSprints     ToolProjectSprints[]
+  ToolProjectTags        ToolProjectTags[]
+  ToolProjectTasks       ToolProjectTasks[]
+  ToolProjectUsers       ToolProjectUsers[]
+  Projects               Projects                 @relation(fields: [projectId], references: [id], onDelete: NoAction)
+  Users                  Users                    @relation(fields: [userId], references: [id], onDelete: NoAction)
+}
+
+model UserCalenders {
+  id        String   @id @db.Uuid
+  userId    String?  @db.Uuid
+  startTime DateTime @db.Timestamptz(6)
+  endTime   DateTime @db.Timestamptz(6)
+  createdAt DateTime @db.Timestamptz(6)
+  updatedAt DateTime @db.Timestamptz(6)
+  Users     Users?   @relation(fields: [userId], references: [id])
+}
+
+model UserConnections {
+  id                                      String   @id @db.Uuid
+  fromUserId                              String   @db.Uuid
+  toUserId                                String   @db.Uuid
+  status                                  String?  @default("waiting") @db.VarChar(255)
+  createdAt                               DateTime @db.Timestamptz(6)
+  updatedAt                               DateTime @db.Timestamptz(6)
+  Users_UserConnections_fromUserIdToUsers Users    @relation("UserConnections_fromUserIdToUsers", fields: [fromUserId], references: [id], onDelete: NoAction)
+  Users_UserConnections_toUserIdToUsers   Users    @relation("UserConnections_toUserIdToUsers", fields: [toUserId], references: [id], onDelete: NoAction)
+}
+
+model UserProjectReviews {
+  id                                             String   @id @db.Uuid
+  userId                                         String   @db.Uuid
+  createByUserId                                 String   @db.Uuid
+  projectId                                      String   @db.Uuid
+  comment                                        String   @db.VarChar(255)
+  rating                                         Int      @default(0)
+  createdAt                                      DateTime @db.Timestamptz(6)
+  updatedAt                                      DateTime @db.Timestamptz(6)
+  Users_UserProjectReviews_createByUserIdToUsers Users    @relation("UserProjectReviews_createByUserIdToUsers", fields: [createByUserId], references: [id], onDelete: NoAction)
+  Projects                                       Projects @relation(fields: [projectId], references: [id], onDelete: NoAction)
+  Users_UserProjectReviews_userIdToUsers         Users    @relation("UserProjectReviews_userIdToUsers", fields: [userId], references: [id], onDelete: NoAction)
+}
+
+model UserSkills {
+  id        String   @id @db.Uuid
+  userId    String   @db.Uuid
+  skillId   String   @db.Uuid
+  points    Decimal  @default(0) @db.Decimal
+  level     Int      @default(0)
+  createdAt DateTime @db.Timestamptz(6)
+  updatedAt DateTime @db.Timestamptz(6)
+  Skills    Skills   @relation(fields: [skillId], references: [id], onDelete: NoAction)
+  Users     Users    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Users {
+  id                                                          String                     @id @db.Uuid
+  name                                                        String                     @db.VarChar(255)
+  email                                                       String                     @unique @db.VarChar(255)
+  role                                                        String                     @default("client") @db.VarChar(255)
+  emailVerificationGuid                                       String                     @db.Uuid
+  emailVerified                                               Boolean                    @default(false)
+  password                                                    String?                    @db.VarChar(255)
+  alternativeEmail                                            String?                    @db.VarChar(255)
+  mobile                                                      String?                    @db.VarChar(255)
+  imageId                                                     String?                    @db.Uuid
+  open                                                        Boolean?                   @default(false)
+  createdAt                                                   DateTime                   @db.Timestamptz(6)
+  updatedAt                                                   DateTime                   @db.Timestamptz(6)
+  Addresses                                                   Addresses[]
+  AdminTasks_AdminTasks_adminIdToUsers                        AdminTasks[]               @relation("AdminTasks_adminIdToUsers")
+  AdminTasks_AdminTasks_userIdToUsers                         AdminTasks[]               @relation("AdminTasks_userIdToUsers")
+  Biographies                                                 Biographies[]
+  ChatMessages                                                ChatMessages[]
+  ChatUsers                                                   ChatUsers[]
+  Chats                                                       Chats[]
+  Companies                                                   Companies[]
+  DisputeUsers                                                DisputeUsers[]
+  Disputes                                                    Disputes[]
+  EducationalDetails                                          EducationalDetails[]
+  JobProposals                                                JobProposals[]
+  JobRequests                                                 JobRequests[]
+  Jobs                                                        Jobs[]
+  MeetingUsers_MeetingUsers_meetingIdToUsers                  MeetingUsers[]             @relation("MeetingUsers_meetingIdToUsers")
+  MeetingUsers_MeetingUsers_userIdToUsers                     MeetingUsers[]             @relation("MeetingUsers_userIdToUsers")
+  Meetings                                                    Meetings[]
+  ProfessionalDetails                                         ProfessionalDetails[]
+  ProjectCoworkers_ProjectCoworkers_UserIdToUsers             ProjectCoworkers[]         @relation("ProjectCoworkers_UserIdToUsers")
+  ProjectCoworkers_ProjectCoworkers_userIdToUsers             ProjectCoworkers[]         @relation("ProjectCoworkers_userIdToUsers")
+  ProjectDetails                                              ProjectDetails[]
+  ProjectInvites                                              ProjectInvites[]
+  ProjectProposals                                            ProjectProposals[]
+  ProjectTeamMembers                                          ProjectTeamMembers[]
+  Projects                                                    Projects[]
+  Sessions                                                    Sessions[]
+  SkillRequests                                               SkillRequests[]
+  Subscriptions                                               Subscriptions[]
+  TalkRequests                                                TalkRequests[]
+  TeamProposals                                               TeamProposals[]
+  Teams                                                       Teams[]
+  ToDos                                                       ToDos[]
+  ToolProjectTaskAssignees                                    ToolProjectTaskAssignees[]
+  ToolProjectTaskComments                                     ToolProjectTaskComments[]
+  ToolProjectTasks                                            ToolProjectTasks[]
+  ToolProjectUsers                                            ToolProjectUsers[]
+  ToolProjects                                                ToolProjects[]
+  UserCalenders                                               UserCalenders[]
+  UserConnections_UserConnections_fromUserIdToUsers           UserConnections[]          @relation("UserConnections_fromUserIdToUsers")
+  UserConnections_UserConnections_toUserIdToUsers             UserConnections[]          @relation("UserConnections_toUserIdToUsers")
+  UserProjectReviews_UserProjectReviews_createByUserIdToUsers UserProjectReviews[]       @relation("UserProjectReviews_createByUserIdToUsers")
+  UserProjectReviews_UserProjectReviews_userIdToUsers         UserProjectReviews[]       @relation("UserProjectReviews_userIdToUsers")
+  UserSkills                                                  UserSkills[]
+  Files                                                       Files?                     @relation(fields: [imageId], references: [id])
+}
+
+enum enum_AdminTasks_status {
+  new
+  in_progress
+  resolved
+  closed
+  deferred
+}
+
+enum enum_ChatUsers_access {
+  member
+  admin
+}
+
+enum enum_Disputes_status {
+  new
+  in_progress
+  resolved
+}
+
+enum enum_EducationalDetails_type {
+  bachelor
+  master
+  doctorate
+  diploma
+  certificate
+  foundation
+  professional
+  high_school
+  online
+}
+
+enum enum_JobProposals_status {
+  new
+  read
+  cancel
+  interviewing
+  completed
+}
+
+enum enum_Jobs_status {
+  open
+  interviewing
+  shortlisting
+  in_progress
+  completed
+  closed
+}
+
+enum enum_MeetingUsers_access {
+  admin
+  member
+}
+
+enum enum_MeetingUsers_status {
+  new
+  active
+  accepted
+  declined
+  cancelled
+  in_a_meeting
+}
+
+enum enum_Meetings_status {
+  new
+  active
+  ended
+  cancelled
+  rescheduled
+}
+
+enum enum_ProjectCoworkers_access {
+  admin
+  editor
+  view_only
+}
+
+enum enum_ProjectCoworkers_status {
+  invited
+  active
+  cancelled
+}
+
+enum enum_ProjectInvites_choice {
+  hourly
+  fixed
+}
+
+enum enum_ProjectInvites_status {
+  invited
+  active
+  cancelled
+}
+
+enum enum_ProjectProposals_choice {
+  hourly
+  fixed
+}
+
+enum enum_ProjectProposals_status {
+  new
+  read
+  cancelled
+  interviewing
+  accepted
+}
+
+enum enum_Projects_choice {
+  hourly
+  fixed
+}
+
+enum enum_Projects_hoursPerWeek {
+  less_than_30
+  more_than_30
+}
+
+enum enum_Projects_skillLevel {
+  basic
+  intermediate
+  expert
+}
+
+enum enum_Projects_status {
+  open
+  in_progress
+  on_hold
+  completed
+}
+
+enum enum_Projects_timeline {
+  less_than_one_month
+  one_to_three_months
+  three_to_six_months
+  more_than_six_months
+}
+
+enum enum_TeamProposals_status {
+  new
+  accept
+  ignore
+  cancel
+}
+
+enum enum_ToolProjectFixVersions_status {
+  new
+  in_review
+  declined
+  released
+}
+
+enum enum_ToolProjectSprints_status {
+  new
+  active
+  completed
+  qa_testing
+  done
+}
+
+enum enum_ToolProjectTasks_priority {
+  lowest
+  low
+  medium
+  high
+  highest
+}
+
+enum enum_ToolProjectTasks_severity {
+  low
+  medium
+  high
+  critical
+}
+
+enum enum_ToolProjectTasks_type {
+  task
+  bug
+  enhancement
+}
+
+enum enum_ToolProjectUsers_access {
+  admin
+  member
+}
+
+enum enum_ToolProjectUsers_status {
+  pending
+  accepted
+  rejected
+  cancelled
+}
+
+enum enum_ToolProjects_status {
+  active
+  in_active
+  closed
+}
+
+enum enum_Users_role {
+  client
+  student
+  freelancer
+  admin
+}
