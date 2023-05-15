@@ -233,28 +233,28 @@ model JobSkills {
 }
 
 model Jobs {
-  id            String           @id @db.Uuid
-  userId        String           @db.Uuid
-  title         String           @db.VarChar(255)
-  description   String?          @db.VarChar(255)
-  salary        String?          @db.VarChar(255)
-  type          String?          @db.VarChar(255)
-  companyId     String?          @db.Uuid
-  startDate     DateTime?        @db.Timestamptz(6)
-  endDate       DateTime?        @db.Timestamptz(6)
-  projectId     String?          @db.Uuid
-  status        enum_Jobs_status @default(open)
-  jobType       String           @default("permanent") @db.VarChar(255)
-  employeeType  String           @default("fullTime") @db.VarChar(255)
-  modality      String           @default("remote") @db.VarChar(255)
-  skillIds      String[]         @default(dbgenerated("(ARRAY[]::character varying[])::character varying(255)[]")) @db.VarChar(255)
-  createdAt     DateTime         @db.Timestamptz(6)
-  updatedAt     DateTime         @db.Timestamptz(6)
+  id            String                 @id @db.Uuid
+  userId        String                 @db.Uuid
+  title         String                 @db.VarChar(255)
+  description   String?
+  salary        String?                @db.VarChar(255)
+  type          String?                @db.VarChar(255)
+  companyId     String?                @db.Uuid
+  startDate     DateTime?              @db.Timestamptz(6)
+  endDate       DateTime?              @db.Timestamptz(6)
+  projectId     String?                @db.Uuid
+  status        enum_Jobs_status       @default(open)
+  jobType       enum_Jobs_jobType      @default(permanent)
+  employeeType  enum_Jobs_employeeType @default(full_time)
+  modality      enum_Jobs_modality     @default(remote)
+  skillIds      String[]               @default(dbgenerated("(ARRAY[]::character varying[])::character varying(255)[]")) @db.VarChar(255)
+  createdAt     DateTime               @db.Timestamptz(6)
+  updatedAt     DateTime               @db.Timestamptz(6)
   JobProposals  JobProposals[]
   JobSkills     JobSkills[]
-  Companies     Companies?       @relation(fields: [companyId], references: [id])
-  Projects      Projects?        @relation(fields: [projectId], references: [id])
-  Users         Users            @relation(fields: [userId], references: [id], onDelete: NoAction)
+  Companies     Companies?             @relation(fields: [companyId], references: [id])
+  Projects      Projects?              @relation(fields: [projectId], references: [id])
+  Users         Users                  @relation(fields: [userId], references: [id], onDelete: NoAction)
   SkillRequests SkillRequests[]
 }
 
@@ -988,4 +988,21 @@ enum enum_Users_role {
   student
   freelancer
   admin
+}
+
+enum enum_Jobs_employeeType {
+  full_time
+  part_time
+}
+
+enum enum_Jobs_jobType {
+  permanent
+  entry_level
+  contract
+}
+
+enum enum_Jobs_modality {
+  remote
+  on_site
+  hybrid
 }

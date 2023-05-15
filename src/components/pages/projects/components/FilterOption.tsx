@@ -14,7 +14,7 @@ const FilterOption:FC<Props> = ({
 }) => {
   return (
     <FormControlLabel 
-        control={<Checkbox sx={{p:0, px:1}} checked={value} onChange={(event) => onToggle(event.target.checked)} />} 
+        control={<Checkbox sx={{p:0, mx:1}} checked={value} onChange={(event) => onToggle(event.target.checked)} />} 
         label={<Typography fontSize={16} color={'#747474'} fontWeight={400}>{label}</Typography>} 
     />
   )
